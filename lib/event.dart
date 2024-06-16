@@ -1,4 +1,4 @@
-library irc.event;
+library irc3.event;
 
 import 'dart:mirrors';
 

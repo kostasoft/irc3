@@ -21,7 +21,7 @@
 ///        }
 ///      }
 ///
-library irc.parser;
+library irc3.parser;
 
 import 'dart:convert' show Converter;
 

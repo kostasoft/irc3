@@ -1,4 +1,4 @@
-library irc.test.faker;
+library irc3.test.faker;
 
 import 'dart:async';
 import 'package:irc3/client.dart';

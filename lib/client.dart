@@ -1,5 +1,5 @@
 /// IRC for Dart
-library irc.client;
+library irc3.client;
 
 import 'dart:io';
 import 'dart:async';
