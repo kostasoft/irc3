@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 /// IRC Message Colors
 class Color {
@@ -33,7 +33,7 @@ class Color {
       '${forName(color)}${input}${forName(endColor)}';
 
   /// Gets a Color by the name of [input]. If no such color exists it returns null.
-  static String forName(String input) {
+  static String? forName(String input) {
     var name = input.replaceAll(' ', '_').toUpperCase();
     dynamic field;
     try {

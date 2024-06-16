@@ -1,4 +1,4 @@
-part of irc.parser;
+part of '../../parser.dart';
 
 /// Base class for IRC Parsers
 ///

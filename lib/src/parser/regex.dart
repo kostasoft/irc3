@@ -1,4 +1,4 @@
-part of irc.parser;
+part of '../../parser.dart';
 
 /// Regular Expression based IRC Parser
 class RegexIrcParser extends IrcParser {
@@ -14,10 +14,11 @@ class RegexIrcParser extends IrcParser {
       var parsed = kLinePattern.firstMatch(line);
 
       if (parsed == null) {
-        return null;
+        throw FormatException('Unable to parse line: $line');
       }
 
-      match = List<String>.generate(parsed.groupCount + 1, parsed.group);
+      match = List<String>.generate(parsed.groupCount + 1,
+          (index) => parsed.group(index) ?? ''); // Ensure non-null values
     }
 
     var tagStuff = match[1];
@@ -25,10 +26,10 @@ class RegexIrcParser extends IrcParser {
     var command = match[5];
     var param = match[6];
     var msg = match[8];
-    var parameters = param != null ? param.split(' ') : <String>[];
+    var parameters = param.isNotEmpty ? param.split(' ') : <String>[];
     var tags = <String, String>{};
 
-    if (tagStuff != null && tagStuff.isNotEmpty) {
+    if (tagStuff.isNotEmpty) {
       tags = IrcParserSupport.parseTags(tagStuff);
     }
 

@@ -1,7 +1,7 @@
-part of irc.client;
+part of '../../client.dart';
 
 class ParsedCommand {
-  static ParsedCommand parsePotentialCommand(
+  static ParsedCommand? parsePotentialCommand(
       String prefix, MessageEvent event) {
     if (!event.message.startsWith(prefix)) {
       return null;

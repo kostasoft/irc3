@@ -1,20 +1,19 @@
 library irc.test.faker;
 
 import 'dart:async';
-import 'package:irc/client.dart';
+import 'package:irc3/client.dart';
 
 typedef CommandHandler = void Function(Message message);
 
 class FakeServer {
   RegexIrcParser parser = RegexIrcParser();
-  FakeServerConnection connection;
-  StreamController<String> controller =
-      StreamController<String>.broadcast();
+  late FakeServerConnection connection; // Marked as late
+  StreamController<String> controller = StreamController<String>.broadcast();
   StreamController<String> inputs = StreamController<String>.broadcast();
   Stream<String> get messages => inputs.stream;
 
   FakeServer() {
-    connection = FakeServerConnection(this);
+    connection = FakeServerConnection(this); // Initialized here
 
     controller.stream.listen((msg) {
       print('Server Sent: ${msg}');
@@ -106,13 +105,15 @@ class FakeServerConnection extends IrcConnection {
 }
 
 class Environment {
-  Client client;
-  FakeServer server;
+  late Client client;
+  late FakeServer server;
 }
 
 Environment createEnvironment() {
   var server = FakeServer();
-  var client = Client(Configuration(), connection: server.connection);
+  var client = Client(Configuration(bindHost: '', password: ''),
+      connection: server.connection,
+      parser: RegexIrcParser()); // Provide a valid parser
   var env = Environment();
   env.server = server;
   env.client = client;

@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 /// Base Class for IRC Events
 abstract class Event {
@@ -8,12 +8,14 @@ abstract class Event {
   bool isBatched = false;
   String batchId;
 
-  Event(this.client);
+  Event(this.client, {required this.batchId});
+
+  get capabilities => null;
 }
 
 /// Connect Event is dispatched when the client connects to the server
 class ConnectEvent extends Event {
-  ConnectEvent(Client client) : super(client);
+  ConnectEvent(super.client) : super(batchId: '');
 }
 
 class BatchStartEvent extends Event {
@@ -21,7 +23,7 @@ class BatchStartEvent extends Event {
   String get type => body.parameters[1];
   Message body;
 
-  BatchStartEvent(Client client, this.id, this.body) : super(client);
+  BatchStartEvent(super.client, this.id, this.body) : super(batchId: id);
 
   Future<BatchEndEvent> waitForEnd() {
     return client.onEvent<BatchEndEvent>().where((it) => it.id == id).first;
@@ -33,15 +35,16 @@ class BatchEndEvent extends Event {
   List<Message> messages;
   List<Event> events;
 
-  BatchEndEvent(Client client, this.id, this.messages, this.events)
-      : super(client);
+  BatchEndEvent(super.client, this.id, this.messages, this.events)
+      : super(batchId: id);
 }
 
 class MessageSentEvent extends Event {
   String message;
   String target;
 
-  MessageSentEvent(Client client, this.message, this.target) : super(client);
+  MessageSentEvent(super.client, this.message, this.target)
+      : super(batchId: '');
 }
 
 class NetSplitEvent extends Event {
@@ -49,7 +52,8 @@ class NetSplitEvent extends Event {
   String host;
   List<QuitEvent> quits;
 
-  NetSplitEvent(Client client, this.hub, this.host, this.quits) : super(client);
+  NetSplitEvent(super.client, this.hub, this.host, this.quits)
+      : super(batchId: '');
 }
 
 class NetJoinEvent extends Event {
@@ -57,19 +61,20 @@ class NetJoinEvent extends Event {
   String host;
   List<JoinEvent> joins;
 
-  NetJoinEvent(Client client, this.hub, this.host, this.joins) : super(client);
+  NetJoinEvent(super.client, this.hub, this.host, this.joins)
+      : super(batchId: '');
 }
 
 class QuitPartEvent extends Event {
   final Channel channel;
   final String user;
 
-  QuitPartEvent(Client client, this.channel, this.user) : super(client);
+  QuitPartEvent(super.client, this.channel, this.user) : super(batchId: '');
 }
 
 /// Ready Event is dispatched when the client is ready to join channels
 class ReadyEvent extends Event {
-  ReadyEvent(Client client) : super(client);
+  ReadyEvent(super.client) : super(batchId: '');
 
   /// Joins the specified [channel].
   void join(String channel) {
@@ -80,15 +85,15 @@ class ReadyEvent extends Event {
 class IsOnEvent extends Event {
   final List<String> users;
 
-  IsOnEvent(Client client, this.users) : super(client);
+  IsOnEvent(super.client, this.users) : super(batchId: '');
 }
 
 class ServerOperatorEvent extends Event {
-  ServerOperatorEvent(Client client) : super(client);
+  ServerOperatorEvent(super.client) : super(batchId: '');
 }
 
 class ServerTlsEvent extends Event {
-  ServerTlsEvent(Client client) : super(client);
+  ServerTlsEvent(super.client) : super(batchId: '');
 }
 
 class ServerVersionEvent extends Event {
@@ -96,8 +101,8 @@ class ServerVersionEvent extends Event {
   final String server;
   final String comments;
 
-  ServerVersionEvent(Client client, this.server, this.version, this.comments)
-      : super(client);
+  ServerVersionEvent(super.client, this.server, this.version, this.comments)
+      : super(batchId: '');
 }
 
 /// Line Receive Event is dispatched when a line is received from the server
@@ -105,35 +110,31 @@ class LineReceiveEvent extends Event {
   /// Line from the Server
   String line;
 
-  Message _message;
+  late Message _message;
 
-  Message get message {
-    if (_message != null) {
-      return _message;
-    } else {
-      return _message = client.parser.convert(line);
-    }
+  Message get message => _message;
+
+  LineReceiveEvent(super.client, this.line) : super(batchId: '') {
+    _message = client.parser.convert(line);
   }
-
-  LineReceiveEvent(Client client, this.line) : super(client);
 }
 
 class UserOnlineEvent extends Event {
   String user;
 
-  UserOnlineEvent(Client client, this.user) : super(client);
+  UserOnlineEvent(super.client, this.user) : super(batchId: '');
 }
 
 class UserOfflineEvent extends Event {
   String user;
 
-  UserOfflineEvent(Client client, this.user) : super(client);
+  UserOfflineEvent(super.client, this.user) : super(batchId: '');
 }
 
 class MonitorListEvent extends Event {
   List<String> users;
 
-  MonitorListEvent(Client client, this.users) : super(client);
+  MonitorListEvent(super.client, this.users) : super(batchId: '');
 }
 
 class ChangeHostEvent extends Event {
@@ -141,8 +142,8 @@ class ChangeHostEvent extends Event {
   String user;
   String username;
 
-  ChangeHostEvent(Client client, this.user, this.username, this.host)
-      : super(client);
+  ChangeHostEvent(super.client, this.user, this.username, this.host)
+      : super(batchId: '');
 }
 
 /// Message Event is dispatched when a message is received from the server (includes private messages)
@@ -159,9 +160,9 @@ class MessageEvent extends Event {
   /// Message Intent
   String intent;
 
-  MessageEvent(Client client, this.from, this.target, this.message,
-      {this.intent})
-      : super(client);
+  MessageEvent(super.client, this.from, this.target, this.message,
+      {required this.intent, required String batchId})
+      : super(batchId: '');
 
   /// Replies to the Event
   void reply(String message) {
@@ -177,18 +178,19 @@ class MessageEvent extends Event {
   /// If this event is a private message
   bool get isPrivate => target.isUser;
 
-  Channel get channel => target.isChannel ? target as Channel : null;
+  Channel? get channel => target.isChannel ? target as Channel : null;
 }
 
 /// Notice Event is dispatched when a notice is received
 class NoticeEvent extends MessageEvent {
   /// Returns whether the notice is from the system or not.
-  bool get isSystem => from != null && from.isServer;
+  bool get isSystem => from.isServer;
 
   bool get isServer => isSystem;
 
-  NoticeEvent(Client client, Entity from, Entity target, String message)
-      : super(client, from, target, message);
+  NoticeEvent(super.client, super.from, super.target, super.message,
+      {required super.intent})
+      : super(batchId: '');
 
   bool get isChannel => target.isChannel;
 
@@ -212,12 +214,12 @@ class JoinEvent extends Event {
   String username;
   String realname;
 
-  bool get isExtended => realname != null;
+  bool get isExtended => realname.isNotEmpty;
   bool get isRegistered => username != '*';
 
-  JoinEvent(Client client, this.user, this.channel,
-      {this.username, this.realname})
-      : super(client);
+  JoinEvent(super.client, this.user, this.channel,
+      {required this.username, required this.realname})
+      : super(batchId: '');
 
   /// Replies to this Event by sending [message] to the channel
   void reply(String message) => channel.sendMessage(message);
@@ -228,7 +230,7 @@ class NickInUseEvent extends Event {
   /// Original Nickname
   String original;
 
-  NickInUseEvent(Client client, this.original) : super(client);
+  NickInUseEvent(super.client, this.original) : super(batchId: '');
 }
 
 /// Fired when the Client joins a Channel.
@@ -236,7 +238,7 @@ class ClientJoinEvent extends Event {
   /// Channel we joined
   Channel channel;
 
-  ClientJoinEvent(Client client, this.channel) : super(client);
+  ClientJoinEvent(super.client, this.channel) : super(batchId: '');
 }
 
 /// Part Event is dispatched when a user parts a channel that the Client is in
@@ -247,7 +249,7 @@ class PartEvent extends Event {
   /// The user that left
   String user;
 
-  PartEvent(Client client, this.user, this.channel) : super(client);
+  PartEvent(super.client, this.user, this.channel) : super(batchId: '');
 
   /// Replies to the Event by sending [message] to the channel the user left
   void reply(String message) => channel.sendMessage(message);
@@ -258,7 +260,7 @@ class ClientPartEvent extends Event {
   /// Channel we left
   Channel channel;
 
-  ClientPartEvent(Client client, this.channel) : super(client);
+  ClientPartEvent(super.client, this.channel) : super(batchId: '');
 }
 
 /// Quit Event is dispatched when a user quits the server
@@ -266,12 +268,12 @@ class QuitEvent extends Event {
   /// User who quit
   String user;
 
-  QuitEvent(Client client, this.user) : super(client);
+  QuitEvent(super.client, this.user) : super(batchId: '');
 }
 
 /// Disconnect Event is dispatched when we disconnect from the server
 class DisconnectEvent extends Event {
-  DisconnectEvent(Client client) : super(client);
+  DisconnectEvent(super.client) : super(batchId: '');
 }
 
 /// Error Event is dispatched when there is any error in the Client or Server
@@ -285,14 +287,15 @@ class ErrorEvent extends Event {
   /// Type of Error
   String type;
 
-  ErrorEvent(Client client, {this.message, this.err, this.type = 'unspecified'})
-      : super(client);
+  ErrorEvent(super.client,
+      {required this.message, required this.err, this.type = 'unspecified'})
+      : super(batchId: '');
 }
 
 /// Mode Event is dispatched when we are notified of a mode change
 class ModeEvent extends Event {
   /// Channel we received the change from (possibly null)
-  Channel channel;
+  Channel? channel;
 
   /// Mode that was changed
   ModeChange mode;
@@ -302,10 +305,10 @@ class ModeEvent extends Event {
 
   bool get isClient => user == client.nickname;
   bool get hasChannel => channel != null;
-  bool get isChannel => hasChannel && user == null;
+  bool get isChannel => hasChannel && user.isNotEmpty;
 
-  ModeEvent(Client client, this.mode, this.user, [this.channel])
-      : super(client);
+  ModeEvent(super.client, this.mode, this.user, [this.channel])
+      : super(batchId: '');
 }
 
 /// Line Sent Event is dispatched when the Client sends a line to the server
@@ -313,17 +316,11 @@ class LineSentEvent extends Event {
   /// Line that was sent
   String line;
 
-  Message _message;
+  late final Message _message = client.parser.convert(line);
 
-  Message get message {
-    if (_message != null) {
-      return _message;
-    } else {
-      return _message = client.parser.convert(line);
-    }
-  }
+  Message get message => _message;
 
-  LineSentEvent(Client client, this.line) : super(client);
+  LineSentEvent(super.client, this.line) : super(batchId: '');
 }
 
 /// Topic Event is dispatched when the topic changes or is received in a channel
@@ -342,9 +339,9 @@ class TopicEvent extends Event {
 
   bool isChange;
 
-  TopicEvent(Client client, this.channel, this.user, this.topic, this.oldTopic,
+  TopicEvent(super.client, this.channel, this.user, this.topic, this.oldTopic,
       [this.isChange = false])
-      : super(client);
+      : super(batchId: '');
 
   void revert() {
     channel.topic = oldTopic;
@@ -352,38 +349,43 @@ class TopicEvent extends Event {
 }
 
 class ServerCapabilitiesEvent extends Event {
+  @override
   Set<String> capabilities;
 
-  ServerCapabilitiesEvent(Client client, this.capabilities) : super(client);
+  ServerCapabilitiesEvent(super.client, this.capabilities) : super(batchId: '');
 }
 
 class AcknowledgedCapabilitiesEvent extends Event {
+  @override
   Set<String> capabilities;
 
-  AcknowledgedCapabilitiesEvent(Client client, this.capabilities)
-      : super(client);
+  AcknowledgedCapabilitiesEvent(super.client, this.capabilities)
+      : super(batchId: '');
 }
 
 class NotAcknowledgedCapabilitiesEvent extends Event {
+  @override
   Set<String> capabilities;
 
-  NotAcknowledgedCapabilitiesEvent(Client client, this.capabilities)
-      : super(client);
+  NotAcknowledgedCapabilitiesEvent(super.client, this.capabilities)
+      : super(batchId: '');
 }
 
 class AwayEvent extends Event {
   User user;
-  String message;
+  String? message;
   bool get isAway => message != null;
   bool get isBack => message == null;
 
-  AwayEvent(Client client, this.user, this.message) : super(client);
+  AwayEvent(super.client, this.user, this.message) : super(batchId: '');
 }
 
 class CurrentCapabilitiesEvent extends Event {
+  @override
   Set<String> capabilities;
 
-  CurrentCapabilitiesEvent(Client client, this.capabilities) : super(client);
+  CurrentCapabilitiesEvent(super.client, this.capabilities)
+      : super(batchId: '');
 }
 
 class WhowasEvent extends Event {
@@ -392,8 +394,8 @@ class WhowasEvent extends Event {
   final String host;
   final String realname;
 
-  WhowasEvent(Client client, this.nickname, this.user, this.host, this.realname)
-      : super(client);
+  WhowasEvent(super.client, this.nickname, this.user, this.host, this.realname)
+      : super(batchId: '');
 }
 
 /// Nick Change Event is dispatched when a nickname changes (possibly the Client's nickname)
@@ -407,8 +409,8 @@ class NickChangeEvent extends Event {
   /// New Nickname
   String now;
 
-  NickChangeEvent(Client client, this.user, this.original, this.now)
-      : super(client);
+  NickChangeEvent(super.client, this.user, this.original, this.now)
+      : super(batchId: '');
 }
 
 class UserLoggedInEvent extends Event {
@@ -418,20 +420,20 @@ class UserLoggedInEvent extends Event {
   /// Account name for the user.
   String account;
 
-  UserLoggedInEvent(Client client, this.user, this.account) : super(client);
+  UserLoggedInEvent(super.client, this.user, this.account) : super(batchId: '');
 }
 
 class UserLoggedOutEvent extends Event {
   User user;
 
-  UserLoggedOutEvent(Client client, this.user) : super(client);
+  UserLoggedOutEvent(super.client, this.user) : super(batchId: '');
 }
 
 /// Whois Event is dispatched when a WHOIS query is completed
 class WhoisEvent extends Event {
   WhoisBuilder builder;
 
-  WhoisEvent(Client client, this.builder) : super(client);
+  WhoisEvent(super.client, this.builder) : super(batchId: '');
 
   /// The Channels the user is a member in
   List<String> get memberChannels {
@@ -499,13 +501,14 @@ class PongEvent extends Event {
   /// Message in the PONG
   String message;
 
-  PongEvent(Client client, this.message) : super(client);
+  PongEvent(super.client, this.message) : super(batchId: '');
 }
 
 /// An Action Event
 class ActionEvent extends MessageEvent {
-  ActionEvent(Client client, User from, Entity target, String message)
-      : super(client, from, target, message);
+  ActionEvent(super.client, User super.from, super.target, super.message,
+      {required super.intent})
+      : super(batchId: '');
 
   /// Sends [message] to [target] as a action.
   @override
@@ -526,8 +529,8 @@ class KickEvent extends Event {
   /// The Reason Given for [by] kicking [user]
   String reason;
 
-  KickEvent(Client client, this.channel, this.user, this.by, [this.reason])
-      : super(client);
+  KickEvent(super.client, this.channel, this.user, this.by, [this.reason = ''])
+      : super(batchId: '');
 }
 
 /// A Client to Client Protocol Event.
@@ -542,8 +545,8 @@ class CTCPEvent extends Event {
   /// The Message sent
   String message;
 
-  CTCPEvent(Client client, this.user, this.target, this.message)
-      : super(client);
+  CTCPEvent(super.client, this.user, this.target, this.message)
+      : super(batchId: '');
 }
 
 /// Server MOTD Recieved
@@ -551,16 +554,15 @@ class MOTDEvent extends Event {
   /// MOTD Message
   String message;
 
-  MOTDEvent(Client client, this.message) : super(client);
+  MOTDEvent(super.client, this.message) : super(batchId: '');
 }
 
 /// Server ISUPPORT Event
 class ServerSupportsEvent extends Event {
   /// Supported Stuff
-  Map<String, dynamic> supported;
+  Map<String, dynamic> supported = {};
 
-  ServerSupportsEvent(Client client, String message) : super(client) {
-    supported = {};
+  ServerSupportsEvent(super.client, String message) : super(batchId: '') {
     var split = message.split(' ');
     split.forEach((it) {
       if (it.contains('=')) {
@@ -588,7 +590,7 @@ class InviteEvent extends Event {
   /// The user who invited the client
   String user;
 
-  InviteEvent(Client client, this.channel, this.user) : super(client);
+  InviteEvent(super.client, this.channel, this.user) : super(batchId: '');
 
   /// Joins the Channel
   void join() => client.join(channel);
@@ -607,6 +609,6 @@ class UserInvitedEvent extends Event {
   /// The user who invited.
   User inviter;
 
-  UserInvitedEvent(Client client, this.channel, this.user, this.inviter)
-      : super(client);
+  UserInvitedEvent(super.client, this.channel, this.user, this.inviter)
+      : super(batchId: '');
 }

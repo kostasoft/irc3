@@ -1,6 +1,6 @@
 library parser_tests;
 
-import 'package:irc/parser.dart';
+import 'package:irc3/parser.dart';
 import 'package:test/test.dart';
 
 typedef InputChecker<T> = dynamic Function(T value);
@@ -30,7 +30,7 @@ main() {
       test(input, () {
         var hostmask = Hostmask.parse(input);
         var checker = inputs[input];
-        checker(hostmask);
+        checker!(hostmask);
       });
     }
   });
@@ -74,7 +74,7 @@ main() {
       test(input, () {
         var checker = inputs[input];
         var message = parser.convert(input);
-        checker(message);
+        checker!(message);
       });
     }
   });
@@ -92,7 +92,7 @@ main() {
     for (var input in inputs.keys) {
       test(input, () {
         var glob = GlobHostmask(input);
-        for (var against in inputs[input]) {
+        for (var against in inputs[input]!) {
           var matcher = against.startsWith('!') ? isFalse : isTrue;
           expect(glob.matches(against), matcher);
         }

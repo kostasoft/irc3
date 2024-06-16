@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 abstract class IrcConnection {
   Future connect(Configuration config);
@@ -11,8 +11,8 @@ abstract class IrcConnection {
 }
 
 class SocketIrcConnection extends IrcConnection {
-  Stream<String> _lines;
-  Socket _socket;
+  late Stream<String> _lines;
+  late Socket _socket;
   bool _done = false;
 
   @override
@@ -40,10 +40,10 @@ class SocketIrcConnection extends IrcConnection {
 
   @override
   Stream<String> lines() {
-    _lines ??= _socket
-          .cast<List<int>>()
-          .transform(const Utf8Decoder(allowMalformed: true))
-          .transform(const LineSplitter());
+    _lines = _socket
+        .cast<List<int>>()
+        .transform(const Utf8Decoder(allowMalformed: true))
+        .transform(const LineSplitter());
 
     return _lines;
   }
@@ -53,7 +53,7 @@ class SocketIrcConnection extends IrcConnection {
     if (_done) {
       return Future.value();
     }
-    _lines = null;
+    _lines = const Stream.empty(); // Assigning an empty stream instead of null
     var future = _socket.close();
     _socket.destroy();
     _done = true;
@@ -76,7 +76,10 @@ class SocketIrcConnection extends IrcConnection {
       return false;
     });
 
-    _lines = null;
+    _lines = _socket
+        .cast<List<int>>()
+        .transform(const Utf8Decoder(allowMalformed: true))
+        .transform(const LineSplitter());
 
     _done = false;
     unawaited(_socket.done.then((_) {
@@ -86,7 +89,7 @@ class SocketIrcConnection extends IrcConnection {
 }
 
 class WebSocketIrcConnection extends IrcConnection {
-  WebSocket _socket;
+  late WebSocket _socket;
 
   @override
   Future connect(Configuration config) async {

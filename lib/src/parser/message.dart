@@ -1,4 +1,4 @@
-part of irc.parser;
+part of '../../parser.dart';
 
 /// IRC Message
 class Message {
@@ -20,47 +20,46 @@ class Message {
 
   /// Creates a new Message
   Message(
-      {this.line,
+      {required this.line,
       hostmask,
-      this.command,
-      this.message,
-      this.parameters,
-      this.tags})
-      : _hostmask = hostmask;
+      required this.command,
+      required this.message,
+      required this.parameters,
+      required this.tags})
+      : _hostmask = hostmask,
+        _serverTime =
+            DateTime.now(); // Initializing with current time as default
 
   @override
   String toString() => line;
 
-  Hostmask _parsedHostmask;
+  late Hostmask _parsedHostmask;
+  bool _isHostmaskParsed = false;
 
   /// Gets the Parsed Hostmask
   Hostmask get hostmask {
-    if (_parsedHostmask != null || _hostmask == null) {
-      return _parsedHostmask;
+    if (!_isHostmaskParsed) {
+      _parsedHostmask = Hostmask.parse(_hostmask);
+      _isHostmaskParsed = true;
     }
-
-    return _parsedHostmask = Hostmask.parse(_hostmask);
+    return _parsedHostmask;
   }
 
   /// The Plain Hostmask
   String get plainHostmask => _hostmask;
 
   bool get hasAccountTag => tags.containsKey('account');
-  String get accountTag => tags['account'];
+  String? get accountTag => tags['account'];
 
   bool get hasServerTime => tags.containsKey('time');
   DateTime get serverTime {
-    if (_serverTime != null) {
-      return _serverTime;
-    } else {
-      return _serverTime = DateTime.parse(tags['time']);
-    }
+    return _serverTime;
   }
 
   bool get isBatched => tags.containsKey('batch');
-  String get batchId => tags['batch'];
+  String? get batchId => tags['batch'];
 
-  DateTime _serverTime;
+  late DateTime _serverTime;
 }
 
 /// IRC Parser Helpers
@@ -81,10 +80,6 @@ class IrcParserSupport {
   ///
   /// [input] should begin with '(' and contain ')'
   static Map<String, String> parseSupportedPrefixes(String input) {
-    if (input == null) {
-      return {};
-    }
-
     var out = <String, String>{};
     var split = input.split(')');
     var modes = split[0].substring(1).split('');
@@ -102,11 +97,9 @@ class IrcParserSupport {
   static ModeChange parseMode(String input) {
     ModeChange mode;
     if (input.startsWith('+')) {
-      mode = ModeChange(
-          input.substring(1).split('').toSet(), <String>{});
+      mode = ModeChange(input.substring(1).split('').toSet(), <String>{});
     } else if (input.startsWith('-')) {
-      mode = ModeChange(
-          <String>{}, input.substring(1).split('').toSet());
+      mode = ModeChange(<String>{}, input.substring(1).split('').toSet());
     } else {
       throw Exception('Failed to parse mode: invalid prefix for ${input}');
     }
@@ -144,7 +137,7 @@ class Mode {
 
   Mode(this.modes);
   Mode.empty() : modes = <String>{};
-  
+
   bool has(String x) {
     return modes.contains(x);
   }

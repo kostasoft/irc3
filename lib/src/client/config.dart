@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 /// IRC Client Configuration
 class Configuration {
@@ -95,8 +95,8 @@ class Configuration {
       this.realname = 'Dart IRC Bot',
       this.ssl = false,
       this.allowInvalidCertificates = false,
-      this.bindHost,
-      this.password,
+      required this.bindHost,
+      required this.password,
       this.capabilities = const [],
       this.enableInviteNotify = true,
       this.enableExtendedJoin = true,

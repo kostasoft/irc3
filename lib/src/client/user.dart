@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 /// An IRC User
 class User extends Entity {
@@ -52,7 +52,7 @@ class User extends Entity {
       }
     };
 
-    client.register(handler);
+    client.register(handler, intent: '');
     client.whois(nickname);
 
     return completer.future
@@ -65,5 +65,15 @@ class User extends Entity {
     });
   }
 
-  User(this.client, this._nickname);
+  User(this.client, this._nickname,
+      {String username = '',
+      String realName = '',
+      String serverName = '',
+      String hostname = '',
+      String serverInfo = ''})
+      : _username = username,
+        _realName = realName,
+        _serverName = serverName,
+        _hostname = hostname,
+        _serverInfo = serverInfo;
 }

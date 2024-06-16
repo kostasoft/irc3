@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 /// Base Class for a Client
 abstract class ClientBase {
@@ -142,7 +142,8 @@ abstract class ClientBase {
       {String username = '____DART_PLEASE_INJECT_DEFAULT____',
       String password = 'password',
       String nickserv = 'NickServ',
-      String Function(String user, String password) generateMessage = _nickserv}) {
+      String Function(String user, String password) generateMessage =
+          _nickserv}) {
     if (username == '____DART_PLEASE_INJECT_DEFAULT____') {
       username = config.username;
     }
@@ -162,11 +163,11 @@ abstract class ClientBase {
 
   /// Gets a channel object for the channel's [name].
   /// Returns null if no such channel exists.
-  Channel getChannel(String name);
+  Channel? getChannel(String name);
 
   /// Get a user object for the server.
   /// Returns null if no such user exists.
-  User getUser(String nickname);
+  User? getUser(String nickname);
 
   /// Joins the specified [channel].
   void join(String channel) {
@@ -217,7 +218,7 @@ abstract class ClientBase {
     send('MODE ${user} ${mode}');
   }
 
-  void knock(String channel, [String message]) {
+  void knock(String channel, [String? message]) {
     if (supported.containsKey('KNOCK') && supported['KNOCK']) {
       send(message != null
           ? 'KNOCK ${channel}'
@@ -236,7 +237,7 @@ abstract class ClientBase {
       sendCTCP(target, 'ACTION ${msg}');
 
   /// Kicks [user] from [channel] with an optional [reason].
-  void kick(Channel channel, User user, [String reason]) {
+  void kick(Channel channel, User user, [String? reason]) {
     if (reason != null && supported.containsKey('KICKLEN')) {
       var max = supported['KICKLEN'];
       if (reason.length > max) {

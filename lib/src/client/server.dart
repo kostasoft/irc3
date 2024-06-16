@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 /// Handles actions from the server.
 class Server extends Entity {

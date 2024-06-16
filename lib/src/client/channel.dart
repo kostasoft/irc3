@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 /// An IRC Channel
 class Channel extends Entity {
@@ -14,22 +14,27 @@ class Channel extends Entity {
   final Map<String, dynamic> metadata;
 
   /// Channel Operators
+  @override
   final Set<User> ops = <User>{};
 
   /// Channel Half-Ops
+  @override
   final Set<User> halfops = <User>{};
 
   /// Channel Voices
+  @override
   final Set<User> voices = <User>{};
 
   /// Channel Members
+  @override
   final Set<User> members = <User>{};
 
   /// Channel Owners (Not Supported on all Servers)
+  @override
   final Set<User> owners = <User>{};
-  
+
   /// Channel topic
-  String _topic;
+  late final String _topic;
 
   /// Banned Hostmasks
   final List<GlobHostmask> bans = [];
@@ -57,7 +62,7 @@ class Channel extends Entity {
   }
 
   /// User who changed the topic last.
-  String _topicUser;
+  late final String _topicUser;
 
   /// Invite a user to the Channel.
   void invite(User user) {
@@ -65,8 +70,10 @@ class Channel extends Entity {
   }
 
   /// Get all users for the Channel.
+  @override
   Set<User> get allUsers {
-    var all = <User>{}   ..addAll(ops)
+    var all = <User>{}
+      ..addAll(ops)
       ..addAll(voices)
       ..addAll(members)
       ..addAll(owners)
@@ -75,7 +82,9 @@ class Channel extends Entity {
   }
 
   /// Creates a new channel associated with [client] named [name].
-  Channel(this.client, this.name) : metadata = {};
+  Channel(this.client, this.name, this._topic, this._topicUser,
+      {required String id})
+      : metadata = {};
 
   /// Sends [message] as a channel message
   void sendMessage(String message) => client.sendMessage(name, message);
@@ -102,10 +111,10 @@ class Channel extends Entity {
   void unban(User user) => setMode('-b', user);
 
   /// Kicks [user] from channel with optional [reason].
-  void kick(User user, [String reason]) => client.kick(this, user, reason);
+  void kick(User user, [String? reason]) => client.kick(this, user, reason);
 
   /// Sets +b on [user] then kicks [user] with the specified [reason]
-  void kickban(User user, [String reason]) {
+  void kickban(User user, [String? reason]) {
     ban(user);
     kick(user, reason);
   }
@@ -126,12 +135,8 @@ class Channel extends Entity {
   }
 
   /// Sets the Mode on the Channel or if the user if [user] is specified.
-  void setMode(String mode, [User user]) {
-    if (user == null) {
-      client.send('MODE ${name} ${mode}');
-    } else {
-      client.send('MODE ${name} ${mode} ${user}');
-    }
+  void setMode(String mode, [User? user]) {
+    client.send('MODE ${name} ${mode} ${user}');
   }
 
   /// Checks whether a user is inside this channel.

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:irc/client.dart';
+import 'package:irc3/client.dart';
 
 typedef CommandHandler = Function(CommandEvent event);
 
@@ -17,9 +17,12 @@ void main() {
       port: 6667,
       nickname: 'DartBot$nickOffset',
       username: 'DartBot$nickOffset',
-      realname: 'DartBot');
+      realname: 'DartBot',
+      password: '',
+      bindHost: '');
 
-  var client = Client(config);
+  var client =
+      Client(config, parser: RegexIrcParser()); // Provide a valid parser
   client.connect();
 
   client.onLineSent.listen((event) {
@@ -36,14 +39,8 @@ void main() {
   });
 
   client.onMode.listen((event) {
-    if (event.channel != null && event.user != null) {
-      print(
-          'Mode (${event.mode}) given to ${event.user} in ${event.channel.name}');
-    } else if (event.channel != null) {
-      print('Mode (${event.mode}) given to ${event.channel.name}');
-    } else if (event.user != null) {
-      print('Mode (${event.mode}) was set on us.');
-    }
+    print(
+        'Mode (${event.mode}) given to ${event.user} in ${event.channel?.name}');
   });
 
   client.onReady.listen((event) {
@@ -54,7 +51,8 @@ void main() {
     }
   });
 
-  client.register(handleAsCommand);
+  client.register(handleAsCommand,
+      intent: 'someIntent'); // Provide the required intent parameter
 
   command('notice-me', (CommandEvent event) {
     event.notice('This is a test notice to you');
@@ -81,7 +79,7 @@ void main() {
     if (event.args.length == 1) {
       client.part(event.args[0]);
     } else if (event.args.isEmpty) {
-      client.part(event.channel.name);
+      client.part(event.channel!.name);
     } else {
       event.reply('Usage: part [channel]');
     }
@@ -92,11 +90,11 @@ void main() {
   });
 
   command('topic', (CommandEvent event) {
-    event.reply(event.channel.topic);
+    event.reply(event.channel!.topic);
   });
 
   command('bans', (CommandEvent event) {
-    event.reply('${event.channel.bans}');
+    event.reply('${event.channel?.bans}');
   });
 
   command('spam', (CommandEvent event) {
@@ -122,22 +120,23 @@ void main() {
       return;
     }
 
-    Channel channel = event.target;
+    Entity channel = event.target;
     if (event.args.isNotEmpty) {
-      channel = client.getChannel(event.args[0]);
+      channel = client.getChannel(event.args[0])!;
     }
 
-    if (channel == null) {
-      event.notice('${event.args[0]} not found.');
-      return;
-    }
-
-    event.notice('> Members: ${joinNicks(channel.members)}');
-    event.notice('> Ops: ${joinNicks(channel.ops)}');
-    event.notice('> Voices: ${joinNicks(channel.voices)}');
-    event.notice('> Owners: ${joinNicks(channel.owners)}');
-    event.notice('> Half-Ops: ${joinNicks(channel.halfops)}');
-    event.notice('> All Users: ${joinNicks(channel.allUsers)}');
+    event.notice(
+        '> Members: ${joinNicks(channel.members ?? <User>{})}'); // Handle nullable Set<User>
+    event.notice(
+        '> Ops: ${joinNicks(channel.ops ?? <User>{})}'); // Handle nullable Set<User>
+    event.notice(
+        '> Voices: ${joinNicks(channel.voices ?? <User>{})}'); // Handle nullable Set<User>
+    event.notice(
+        '> Owners: ${joinNicks(channel.owners ?? <User>{})}'); // Handle nullable Set<User>
+    event.notice(
+        '> Half-Ops: ${joinNicks(channel.halfops ?? <User>{})}'); // Handle nullable Set<User>
+    event.notice(
+        '> All Users: ${joinNicks(channel.allUsers ?? <User>{})}'); // Handle nullable Set<User>
   });
 
   command('act', (CommandEvent event) {
@@ -158,11 +157,12 @@ void main() {
   command('away', (CommandEvent event) async {
     if (event.args.length == 1) {
       var user = client.getUser(event.args[0]);
-      var isAway = await user.isAway();
-      if (isAway) {
-        event.reply('${user.name} is away.');
+      var isAway = await user?.isAway();
+      if (isAway != null && isAway) {
+        // Check for null
+        event.reply('${user?.name} is away.');
       } else {
-        event.reply('${user.name} is not away.');
+        event.reply('${user?.name} is not away.');
       }
     }
   });
@@ -195,7 +195,7 @@ void handleAsCommand(MessageEvent event) {
     args.removeWhere((i) => i.isEmpty || i == ' ');
 
     if (commands.containsKey(command)) {
-      commands[command].add(CommandEvent(event, command, args));
+      commands[command]?.add(CommandEvent(event, command, args));
     } else {
       commandNotFound(CommandEvent(event, command, args));
     }
@@ -230,7 +230,8 @@ class CommandEvent extends MessageEvent {
   List<String> args;
 
   CommandEvent(MessageEvent event, this.command, this.args)
-      : super(event.client, event.from, event.target, event.message);
+      : super(event.client, event.from, event.target, event.message,
+            intent: event.intent, batchId: event.batchId);
 
   void notice(String message, {bool user = true}) =>
       client.sendNotice(from.name, message);

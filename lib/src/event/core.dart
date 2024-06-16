@@ -1,4 +1,4 @@
-part of irc.event;
+part of '../../event.dart';
 
 /// A function that handles events.
 typedef EventHandlerFunction<T> = Function(T event);
@@ -10,7 +10,7 @@ typedef EventFilter<T> = bool Function(T event);
 
 /// A Cancelable Event
 abstract class Cancelable {
-  bool _isCanceled;
+  late bool _isCanceled;
 
   /// Checks if this event has been canceled.
   bool get isCanceled => _isCanceled;
@@ -33,21 +33,21 @@ class DeadEvent {
 class EventDispatcher {
   /// Default Event Handler Priority
   final int defaultPriority;
-  final int dispatcherId;
+  final int? dispatcherId;
   final _handlers = <Type, List<_EventHandler>>{};
-  
+
   /// Creates a new Event Dispatcher.
   ///
   /// If [defaultPriority] is specified, it will be the priority
   /// that is assigned to handlers when they do not specify one.
-  EventDispatcher({this.defaultPriority = 10, this.dispatcherId});
+  EventDispatcher({this.defaultPriority = 10, required this.dispatcherId});
 
   /// Unregisters a [handler] from receiving events. If the specific [handler]
   /// has a filter, it should be provided in order to properly unregister the
   /// listener. If the specific [handler] has a priority, it should be provided as well.
   /// Returns whether the [handler] was removed or not.
   bool unregister<T>(EventHandlerFunction<T> handler,
-      {EventFilter filter = _defaultFilter, int priority}) {
+      {EventFilter filter = _defaultFilter, int? priority}) {
     priority ??= defaultPriority;
 
     var name = _getName(handler);
@@ -57,9 +57,9 @@ class EventDispatcher {
     }
 
     var h = _EventHandler(handler, filter, priority);
-    _EventHandler fh;
+    _EventHandler? fh;
 
-    for (var mh in _handlers[name]) {
+    for (var mh in _handlers[name]!) {
       if (mh == h) {
         fh = mh;
         break;
@@ -67,8 +67,8 @@ class EventDispatcher {
     }
 
     if (fh != null) {
-      _handlers[name].remove(fh);
-      _handlers[name].sort((_EventHandler a, _EventHandler b) {
+      _handlers[name]?.remove(fh);
+      _handlers[name]?.sort((_EventHandler a, _EventHandler b) {
         return b.priority.compareTo(a.priority);
       });
       return true;
@@ -93,7 +93,7 @@ class EventDispatcher {
   /// Returns false if [method] is already registered, otherwise true.
   bool register<T>(EventHandlerFunction<T> handler,
       {EventFilter filter = _defaultFilter,
-      int priority,
+      int? priority,
       bool always = false}) {
     priority ??= defaultPriority;
 
@@ -104,7 +104,7 @@ class EventDispatcher {
     var handlers = _handlers[name];
 
     var h = _EventHandler(handler, filter, priority, null, always);
-    if (handlers.any((it) => it == h)) {
+    if (handlers!.any((it) => it == h)) {
       return false;
     }
 
@@ -149,15 +149,7 @@ class EventDispatcher {
       };
       var filter = sub.filter;
 
-      filter ??= (e) {
-          if (sub.when != null) {
-            return !sub.when(e);
-          } else {
-            return false;
-          }
-        };
-
-      var priority = sub.priority ?? defaultPriority;
+      var priority = sub.priority;
 
       if (!_handlers.containsKey(name)) {
         _handlers[name] = <_EventHandler>[];
@@ -166,8 +158,8 @@ class EventDispatcher {
       var handlers = _handlers[name];
       var h = _EventHandler(handler, filter, priority, object, sub.always);
 
-      handlers.add(h);
-      handlers.sort((_EventHandler a, _EventHandler b) =>
+      handlers?.add(h);
+      handlers?.sort((_EventHandler a, _EventHandler b) =>
           b.priority.compareTo(a.priority));
       registered = true;
     }
@@ -213,7 +205,7 @@ class EventDispatcher {
     var handlers = _handlers[name];
     var executed = false;
 
-    for (var handler in handlers) {
+    for (var handler in handlers!) {
       if (handler.apply(event)) {
         executed = true;
       }
@@ -251,7 +243,7 @@ class _EventHandler {
   final Function function;
   final Function filter;
   final int priority;
-  final Object object;
+  final Object? object; // Make object nullable
   final bool always;
 
   _EventHandler(this.function, this.filter, this.priority,

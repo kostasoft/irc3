@@ -1,4 +1,4 @@
-part of irc.protocol;
+part of '../../protocol.dart';
 
 /// Protocol Replies
 class ReplyConstants {

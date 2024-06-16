@@ -1,4 +1,4 @@
-part of irc.parser;
+part of '../../parser.dart';
 
 /// Represents a Hostmask that has been parsed
 class Hostmask {
@@ -14,10 +14,14 @@ class Hostmask {
   String hostname;
 
   /// Creates a Hostmask instance
-  Hostmask({this.nickname, this.identity, this.hostname});
+  Hostmask(
+      {required this.nickname, required this.identity, required this.hostname});
 
   /// Creates a Hostmask from the parsed [input].
-  Hostmask.parse(String input) {
+  Hostmask.parse(String input)
+      : nickname = '',
+        identity = '',
+        hostname = '' {
     var parts = input.split(HOSTMASK_REGEX);
 
     if (parts.length == 1) {

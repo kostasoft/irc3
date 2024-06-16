@@ -1,4 +1,4 @@
-part of irc.client;
+part of '../../client.dart';
 
 /// Control Multiple Clients
 class ClientPool {
@@ -7,7 +7,8 @@ class ClientPool {
 
   /// Adds a Client using the [config].
   int addClient(Configuration config, {bool connect = false}) {
-    var client = Client(config);
+    var client =
+        Client(config, parser: RegexIrcParser()); // Provide a valid parser
     clients.add(client);
     if (connect) {
       client.connect();
@@ -27,6 +28,6 @@ class ClientPool {
   void sendMessage(String target, String message) =>
       forEach((client) => client.sendMessage(target, message));
   void register<T>(Function(T event) handler) =>
-      forEach((client) => client.register(handler));
+      forEach((client) => client.register(handler, intent: ''));
   void forEach(void Function(Client client) action) => clients.forEach(action);
 }

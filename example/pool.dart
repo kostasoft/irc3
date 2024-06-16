@@ -1,4 +1,4 @@
-import 'package:irc/client.dart';
+import 'package:irc3/client.dart';
 
 void main(List<String> args) {
   if (args.isEmpty) {
@@ -14,7 +14,9 @@ void main(List<String> args) {
         nickname: 'DartBot${i}',
         username: 'DartBot',
         host: server,
-        port: 6667));
+        port: 6667,
+        password: '',
+        bindHost: ''));
   }
   var pool = ClientPool();
   configs.forEach(pool.addClient);
