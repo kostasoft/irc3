@@ -1,4 +1,4 @@
-library parser_tests;
+library;
 
 import 'package:irc3/parser.dart';
 import 'package:test/test.dart';

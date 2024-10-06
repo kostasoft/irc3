@@ -1,4 +1,4 @@
 /// IRC Protocol Helpers
-library irc3.protocol;
+library;
 
 part 'src/protocol/replies.dart';
