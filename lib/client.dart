@@ -4,7 +4,6 @@ library;
 import 'dart:io';
 import 'dart:async';
 import 'dart:convert';
-import 'dart:mirrors';
 
 /* IRC Parsing Support */
 import 'parser.dart';

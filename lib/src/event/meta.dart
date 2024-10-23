@@ -1,7 +1,5 @@
 part of '../../event.dart';
 
-/// Subscribes the method that this is annotated with to the event type of the first parameter.
-/// See [EventDispatcher.registerHandlers].
 class Subscribe<T> {
   final int priority;
   final EventFilter<T> filter;

@@ -6,6 +6,7 @@ environment:
   sdk: '>=3.4.1 <4.0.0'
 dependencies:
   glob: any
+  reflectable: any
 dev_dependencies:
   lints: any
   test: any

@@ -115,57 +115,57 @@ class EventDispatcher {
   }
 
   /// Scans the object for [Subscribe] annotations and registers handlers appropriately.
-  bool registerHandlers(Object object) {
-    var mirror = reflect(object);
-    var registered = false;
-
-    for (var method in mirror.type.instanceMembers.values) {
-      var subscribes = method.metadata
-          .where((it) => it.type.reflectedType == Subscribe)
-          .toList();
-      if (subscribes.isEmpty) {
-        continue;
-      }
-
-      if (subscribes.length > 1) {
-        throw Exception('${MirrorSystem.getName(mirror.type.qualifiedName)}'
-            ' has multiple subscribe annotations.');
-      }
-
-      var m = subscribes.first;
-      var sub = m.reflectee as Subscribe;
-      var params = method.parameters;
-
-      if (params.length != 1) {
-        throw Exception(
-            '${MirrorSystem.getName(mirror.type.qualifiedName)} does not'
-            ' specify a valid event parameter type.');
-      }
-
-      var p = params.first;
-      var name = p.type.reflectedType;
-      var handler = (event) {
-        mirror.invoke(method.simpleName, [event]);
-      };
-      var filter = sub.filter;
-
-      var priority = sub.priority;
-
-      if (!_handlers.containsKey(name)) {
-        _handlers[name] = <_EventHandler>[];
-      }
-
-      var handlers = _handlers[name];
-      var h = _EventHandler(handler, filter, priority, object, sub.always);
-
-      handlers?.add(h);
-      handlers?.sort((_EventHandler a, _EventHandler b) =>
-          b.priority.compareTo(a.priority));
-      registered = true;
-    }
-
-    return registered;
-  }
+  // bool registerHandlers(Object object) {
+  //   var mirror = reflect(object);
+  //   var registered = false;
+  //
+  //   for (var method in mirror.type.instanceMembers.values) {
+  //     var subscribes = method.metadata
+  //         .where((it) => it.type.reflectedType == Subscribe)
+  //         .toList();
+  //     if (subscribes.isEmpty) {
+  //       continue;
+  //     }
+  //
+  //     if (subscribes.length > 1) {
+  //       throw Exception('${MirrorSystem.getName(mirror.type.qualifiedName)}'
+  //           ' has multiple subscribe annotations.');
+  //     }
+  //
+  //     var m = subscribes.first;
+  //     var sub = m.reflectee as Subscribe;
+  //     var params = method.parameters;
+  //
+  //     if (params.length != 1) {
+  //       throw Exception(
+  //           '${MirrorSystem.getName(mirror.type.qualifiedName)} does not'
+  //           ' specify a valid event parameter type.');
+  //     }
+  //
+  //     var p = params.first;
+  //     var name = p.type.reflectedType;
+  //     var handler = (event) {
+  //       mirror.invoke(method.simpleName, [event]);
+  //     };
+  //     var filter = sub.filter;
+  //
+  //     var priority = sub.priority;
+  //
+  //     if (!_handlers.containsKey(name)) {
+  //       _handlers[name] = <_EventHandler>[];
+  //     }
+  //
+  //     var handlers = _handlers[name];
+  //     var h = _EventHandler(handler, filter, priority, object, sub.always);
+  //
+  //     handlers?.add(h);
+  //     handlers?.sort((_EventHandler a, _EventHandler b) =>
+  //         b.priority.compareTo(a.priority));
+  //     registered = true;
+  //   }
+  //
+  //   return registered;
+  // }
 
   /// Unregisters all handlers that were registered on [object].
   bool unregisterHandlers(Object object) {
@@ -220,14 +220,15 @@ class EventDispatcher {
 
   /// Gets the type of the first parameter, used for posting.
   Type _getName(dynamic input) {
-    if (input is Function) {
-      return (reflect(input) as ClosureMirror)
-          .function
-          .parameters
-          .first
-          .type
-          .reflectedType;
-    } else if (input is Type) {
+    // if (input is EventHandlerFunction) {
+    //   return (input.runtimeType as ClosureMirror)
+    //       .function
+    //       .parameters
+    //       .first
+    //       .type
+    //       .reflectedType;
+    // } else
+      if (input is Type) {
       return input;
     } else {
       return input.runtimeType;
